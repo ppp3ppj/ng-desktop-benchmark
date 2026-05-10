@@ -74,6 +74,35 @@ bun run electron:compile
 
 ---
 
+## Package for distribution
+
+Packaged installers are written to the `release/` folder.
+
+| Command | Output |
+|---|---|
+| `bun run dist:win` | Windows — `.exe` installer (NSIS, x64) |
+| `bun run dist:mac` | macOS — `.dmg` (x64 + arm64) |
+| `bun run dist:linux` | Linux — `.AppImage` + `.deb` (x64) |
+
+Each command runs `electron:build` first, then calls `electron-builder`.
+
+> **Cross-compilation limits**
+> - **macOS** packages can only be built on a Mac (Apple code-signing).
+> - **Windows** packages can be built on Windows natively; cross-compiling from Linux/Mac requires Wine.
+> - **Linux** packages can be built from any platform.
+
+### App icons
+
+Place icons in `public/icons/` before packaging:
+
+| File | Platform |
+|---|---|
+| `public/icons/icon.ico` | Windows |
+| `public/icons/icon.icns` | macOS |
+| `public/icons/icon.png` | Linux (256×256 min) |
+
+---
+
 ## Project structure
 
 ```
@@ -91,6 +120,7 @@ ng-electron/
 ├── dist-electron/       # Compiled Electron main process (git-ignored)
 │   ├── main.js
 │   └── preload.js
+├── release/             # Packaged installers from electron-builder (git-ignored)
 ├── tsconfig.electron.json   # TypeScript config for the Electron process
 ├── postcss.config.json      # PostCSS config (required by Angular for Tailwind v4)
 └── angular.json

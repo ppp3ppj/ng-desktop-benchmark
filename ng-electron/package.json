@@ -11,7 +11,41 @@
     "electron:compile": "tsc --project tsconfig.electron.json",
     "electron:build": "ng build --configuration electron && bun run electron:compile",
     "electron:start": "electron .",
-    "electron:dev": "bun run electron:build && electron ."
+    "electron:dev": "bun run electron:build && electron .",
+    "dist:win": "bun run electron:build && electron-builder --win",
+    "dist:mac": "bun run electron:build && electron-builder --mac",
+    "dist:linux": "bun run electron:build && electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.ng-electron.app",
+    "productName": "NgElectron",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist-electron/**",
+      "dist/ng-electron/browser/**",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ],
+      "icon": "public/icons/icon.ico"
+    },
+    "mac": {
+      "target": [
+        { "target": "dmg", "arch": ["x64", "arm64"] }
+      ],
+      "icon": "public/icons/icon.icns"
+    },
+    "linux": {
+      "target": [
+        { "target": "AppImage", "arch": ["x64"] },
+        { "target": "deb", "arch": ["x64"] }
+      ],
+      "icon": "public/icons/icon.png"
+    }
   },
   "private": true,
   "packageManager": "bun@1.3.13",
@@ -33,6 +67,7 @@
     "@types/node": "^25.6.2",
     "daisyui": "^5.5.19",
     "electron": "^42.0.1",
+    "electron-builder": "^26.8.1",
     "jsdom": "^28.0.0",
     "prettier": "^3.8.1",
     "tailwindcss": "^4.3.0",
