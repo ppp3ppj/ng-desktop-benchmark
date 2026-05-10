@@ -1,12 +1,17 @@
 {
   "name": "ng-electron",
   "version": "0.0.0",
+  "main": "dist-electron/main.js",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "electron:compile": "tsc --project tsconfig.electron.json",
+    "electron:build": "ng build --configuration electron && bun run electron:compile",
+    "electron:start": "electron .",
+    "electron:dev": "bun run electron:build && electron ."
   },
   "private": true,
   "packageManager": "bun@1.3.13",
@@ -25,7 +30,9 @@
     "@angular/cli": "^21.2.10",
     "@angular/compiler-cli": "^21.2.0",
     "@tailwindcss/postcss": "^4.3.0",
+    "@types/node": "^25.6.2",
     "daisyui": "^5.5.19",
+    "electron": "^42.0.1",
     "jsdom": "^28.0.0",
     "prettier": "^3.8.1",
     "tailwindcss": "^4.3.0",

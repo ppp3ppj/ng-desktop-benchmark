@@ -1,59 +1,134 @@
-# NgElectron
+# ng-electron
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.10.
+Angular 21 + Electron 42 desktop application with TailwindCSS v4 and DaisyUI v5.
 
-## Development server
+## Prerequisites
 
-To start a local development server, run:
+- [Bun](https://bun.sh/) >= 1.3
+- [Node.js](https://nodejs.org/) >= 20 (required by Electron)
+
+## Install dependencies
 
 ```bash
-ng serve
+bun install
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+## Angular web server
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+Start the Angular dev server (hot reload at `http://localhost:4200`):
+
+```bash
+bun run start
+```
+
+Build for production (output to `dist/ng-electron/browser/`):
+
+```bash
+bun run build
+```
+
+Build in watch mode (rebuilds on file changes):
+
+```bash
+bun run watch
+```
+
+---
+
+## Electron desktop app
+
+### Development
+
+Build Angular + compile the Electron main process, then open the desktop window:
+
+```bash
+bun run electron:dev
+```
+
+### Build only (no launch)
+
+Compiles Angular with the `electron` configuration (`baseHref: "./"`) and compiles
+the TypeScript main process to `dist-electron/`:
+
+```bash
+bun run electron:build
+```
+
+### Launch after build
+
+If you have already run `electron:build`, start Electron without rebuilding:
+
+```bash
+bun run electron:start
+```
+
+### Compile only the Electron main process
+
+Re-compiles `electron/main.ts` and `electron/preload.ts` without touching the Angular build:
+
+```bash
+bun run electron:compile
+```
+
+---
+
+## Project structure
+
+```
+ng-electron/
+├── electron/
+│   ├── main.ts          # Electron main process (BrowserWindow, app lifecycle)
+│   └── preload.ts       # Context bridge — exposes safe APIs to the renderer
+├── src/                 # Angular application source
+│   ├── app/
+│   ├── styles.css       # TailwindCSS v4 + DaisyUI v5 entry point
+│   └── main.ts
+├── dist/                # Angular build output (git-ignored)
+│   └── ng-electron/
+│       └── browser/
+├── dist-electron/       # Compiled Electron main process (git-ignored)
+│   ├── main.js
+│   └── preload.js
+├── tsconfig.electron.json   # TypeScript config for the Electron process
+├── postcss.config.json      # PostCSS config (required by Angular for Tailwind v4)
+└── angular.json
+```
+
+---
+
+## CSS stack
+
+| Package | Version | Role |
+|---|---|---|
+| TailwindCSS | v4 | Utility classes |
+| DaisyUI | v5 | Component library |
+| `@tailwindcss/postcss` | v4 | PostCSS integration for Angular |
+
+Styles are configured in `src/styles.css`:
+
+```css
+@import "tailwindcss";
+@plugin "daisyui";
+```
+
+> **Note:** Angular only reads `postcss.config.json` (not `.mjs` or `.js`).
+> The `postcss.config.json` file at the project root is required for TailwindCSS
+> and DaisyUI to work inside the Angular build pipeline.
+
+---
+
+## Angular CLI
+
+Generate a new component:
 
 ```bash
 ng generate component component-name
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Run unit tests:
 
 ```bash
-ng generate --help
+bun run test
 ```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
