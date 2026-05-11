@@ -2,8 +2,12 @@
 
   <!-- Header -->
   <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold">Todo List</h1>
-    <button class="btn btn-primary btn-sm" (click)="openCreate()">+ New Todo</button>
+    <h1 class="text-2xl font-bold flex items-center gap-2">
+      <i class="ri-todo-line"></i> Todo List
+    </h1>
+    <button class="btn btn-primary btn-sm" (click)="openCreate()">
+      <i class="ri-add-line"></i> New Todo
+    </button>
   </div>
 
   <!-- Loading -->
@@ -16,9 +20,9 @@
   <!-- Empty state -->
   @else if (svc.todos().length === 0) {
     <div class="flex flex-col items-center gap-3 py-20 text-base-content/40">
-      <span class="text-5xl">📝</span>
+      <i class="ri-file-list-3-line text-6xl"></i>
       <p class="text-lg font-medium">No todos yet</p>
-      <p class="text-sm">Click <strong>+ New Todo</strong> to get started</p>
+      <p class="text-sm">Click <strong>New Todo</strong> to get started</p>
     </div>
   }
 
@@ -48,15 +52,21 @@
                   {{ todo.description }}
                 </p>
               }
-              <p class="text-xs text-base-content/40 mt-2">{{ todo.created_at }}</p>
+              <p class="text-xs text-base-content/40 mt-2 flex items-center gap-1">
+                <i class="ri-time-line"></i> {{ todo.created_at }}
+              </p>
             </div>
 
             <!-- Actions -->
             <div class="flex gap-1 shrink-0">
               <button class="btn btn-ghost btn-xs" title="Edit"
-                      (click)="openEdit(todo)">✏️</button>
+                      (click)="openEdit(todo)">
+                <i class="ri-pencil-line"></i>
+              </button>
               <button class="btn btn-ghost btn-xs text-error" title="Delete"
-                      (click)="confirmDelete(todo.id)">🗑️</button>
+                      (click)="confirmDelete(todo.id)">
+                <i class="ri-delete-bin-line"></i>
+              </button>
             </div>
 
           </div>
@@ -70,13 +80,19 @@
 <!-- Create / Edit modal -->
 <dialog class="modal" [class.modal-open]="showModal()">
   <div class="modal-box">
-    <h3 class="font-bold text-lg mb-4">
-      {{ editingTodo() ? 'Edit Todo' : 'New Todo' }}
+    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+      @if (editingTodo()) {
+        <i class="ri-pencil-line"></i> Edit Todo
+      } @else {
+        <i class="ri-add-circle-line"></i> New Todo
+      }
     </h3>
 
     <div class="flex flex-col gap-3">
       <fieldset class="fieldset">
-        <legend class="fieldset-legend">Title <span class="text-error">*</span></legend>
+        <legend class="fieldset-legend">
+          <i class="ri-text"></i> Title <span class="text-error">*</span>
+        </legend>
         <input
           class="input input-bordered w-full"
           placeholder="What needs to be done?"
@@ -84,7 +100,9 @@
       </fieldset>
 
       <fieldset class="fieldset">
-        <legend class="fieldset-legend">Description</legend>
+        <legend class="fieldset-legend">
+          <i class="ri-align-left"></i> Description
+        </legend>
         <textarea
           class="textarea textarea-bordered w-full"
           placeholder="Optional details…"
@@ -95,9 +113,11 @@
     </div>
 
     <div class="modal-action">
-      <button class="btn btn-ghost" (click)="showModal.set(false)">Cancel</button>
+      <button class="btn btn-ghost" (click)="showModal.set(false)">
+        <i class="ri-close-line"></i> Cancel
+      </button>
       <button class="btn btn-primary" [disabled]="!formTitle.trim()" (click)="save()">
-        Save
+        <i class="ri-save-line"></i> Save
       </button>
     </div>
   </div>
@@ -107,11 +127,17 @@
 <!-- Delete confirmation modal -->
 <dialog class="modal" [class.modal-open]="deleteConfirmId() !== null">
   <div class="modal-box">
-    <h3 class="font-bold text-lg">Delete todo?</h3>
+    <h3 class="font-bold text-lg flex items-center gap-2 text-error">
+      <i class="ri-error-warning-line"></i> Delete todo?
+    </h3>
     <p class="py-4 text-base-content/70">This action cannot be undone.</p>
     <div class="modal-action">
-      <button class="btn btn-ghost" (click)="deleteConfirmId.set(null)">Cancel</button>
-      <button class="btn btn-error" (click)="doDelete()">Delete</button>
+      <button class="btn btn-ghost" (click)="deleteConfirmId.set(null)">
+        <i class="ri-close-line"></i> Cancel
+      </button>
+      <button class="btn btn-error" (click)="doDelete()">
+        <i class="ri-delete-bin-line"></i> Delete
+      </button>
     </div>
   </div>
   <div class="modal-backdrop" (click)="deleteConfirmId.set(null)"></div>
