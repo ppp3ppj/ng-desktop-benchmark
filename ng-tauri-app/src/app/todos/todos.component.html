@@ -1,110 +1,154 @@
-<div class="p-6 max-w-2xl mx-auto space-y-6">
+<div class="container mx-auto max-w-2xl px-4 py-8">
 
-  <div class="flex items-center gap-3">
-    <i class="ri-checkbox-multiple-line text-3xl text-primary"></i>
-    <h1 class="text-3xl font-bold">Todos</h1>
-    <div class="badge badge-primary badge-lg ml-auto">
-      {{ remaining() }} left
-    </div>
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold flex items-center gap-2">
+      <i class="ri-todo-line"></i> Todo List
+    </h1>
+    <button class="btn btn-primary btn-sm" (click)="openCreate()">
+      <i class="ri-add-line"></i> New Todo
+    </button>
   </div>
 
   <!-- Error -->
-  @if (todoService.error()) {
-    <div role="alert" class="alert alert-error">
+  @if (svc.error()) {
+    <div role="alert" class="alert alert-error mb-4">
       <i class="ri-error-warning-line text-xl"></i>
-      <span>{{ todoService.error() }}</span>
+      <span>{{ svc.error() }}</span>
     </div>
   }
 
-  <!-- Add form -->
-  <form class="flex gap-2" (submit)="$event.preventDefault(); onAdd()">
-    <input
-      type="text"
-      class="input input-bordered flex-1"
-      placeholder="What needs to be done?"
-      [(ngModel)]="newTitle"
-      name="newTitle"
-    />
-    <button class="btn btn-primary" type="submit" [disabled]="!newTitle.trim()">
-      <i class="ri-add-line"></i> Add
-    </button>
-  </form>
-
-  <!-- Filter tabs -->
-  <div class="tabs tabs-box">
-    <button
-      class="tab"
-      [class.tab-active]="filter() === 'all'"
-      (click)="setFilter('all')"
-    >All</button>
-    <button
-      class="tab"
-      [class.tab-active]="filter() === 'active'"
-      (click)="setFilter('active')"
-    >Active</button>
-    <button
-      class="tab"
-      [class.tab-active]="filter() === 'completed'"
-      (click)="setFilter('completed')"
-    >Completed</button>
-  </div>
-
   <!-- Loading -->
-  @if (todoService.loading()) {
-    <div class="flex justify-center py-8">
+  @if (svc.loading()) {
+    <div class="flex justify-center py-16">
       <span class="loading loading-spinner loading-lg text-primary"></span>
     </div>
   }
 
   <!-- Empty state -->
-  @if (!todoService.loading() && filtered().length === 0) {
-    <div class="text-center py-12 text-base-content/50">
-      <i class="ri-inbox-line text-5xl"></i>
-      <p class="mt-2">No todos here</p>
+  @else if (svc.todos().length === 0) {
+    <div class="flex flex-col items-center gap-3 py-20 text-base-content/40">
+      <i class="ri-file-list-3-line text-6xl"></i>
+      <p class="text-lg font-medium">No todos yet</p>
+      <p class="text-sm">Click <strong>New Todo</strong> to get started</p>
     </div>
   }
 
   <!-- Todo list -->
-  @if (!todoService.loading() && filtered().length > 0) {
-    <ul class="space-y-2">
-      @for (todo of filtered(); track todo.id) {
-        <li class="flex items-center gap-3 bg-base-200 rounded-box px-4 py-3 group">
-          <input
-            type="checkbox"
-            class="checkbox checkbox-primary"
-            [checked]="todo.completed"
-            (change)="onToggle(todo.id, todo.completed)"
-          />
-          <span
-            class="flex-1 text-base"
-            [class.line-through]="todo.completed"
-            [class.opacity-40]="todo.completed"
-          >{{ todo.title }}</span>
-          <span class="text-xs text-base-content/40 hidden group-hover:block">
-            {{ todo.created_at | slice:0:10 }}
-          </span>
-          <button
-            class="btn btn-ghost btn-xs text-error opacity-0 group-hover:opacity-100"
-            (click)="onDelete(todo.id)"
-          >
-            <i class="ri-delete-bin-line"></i>
-          </button>
+  @else {
+    <ul class="flex flex-col gap-3">
+      @for (todo of svc.todos(); track todo.id) {
+        <li class="card bg-base-200 shadow-sm transition-opacity"
+            [class.opacity-50]="todo.completed">
+          <div class="card-body p-4 flex-row items-start gap-3">
+
+            <!-- Checkbox -->
+            <input
+              type="checkbox"
+              class="checkbox checkbox-primary mt-0.5 shrink-0"
+              [checked]="todo.completed"
+              (change)="toggle(todo.id)" />
+
+            <!-- Content -->
+            <div class="flex-1 min-w-0">
+              <p class="font-medium break-words"
+                 [class.line-through]="todo.completed">
+                {{ todo.title }}
+              </p>
+              @if (todo.description) {
+                <p class="text-sm text-base-content/60 mt-1 break-words">
+                  {{ todo.description }}
+                </p>
+              }
+              <p class="text-xs text-base-content/40 mt-2 flex items-center gap-1">
+                <i class="ri-time-line"></i> {{ todo.created_at }}
+              </p>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-1 shrink-0">
+              <button class="btn btn-ghost btn-xs" title="Edit"
+                      (click)="openEdit(todo)">
+                <i class="ri-pencil-line"></i>
+              </button>
+              <button class="btn btn-ghost btn-xs text-error" title="Delete"
+                      (click)="confirmDelete(todo.id)">
+                <i class="ri-delete-bin-line"></i>
+              </button>
+            </div>
+
+          </div>
         </li>
       }
     </ul>
   }
 
-  <!-- Footer actions -->
-  @if (todoService.todos().length > 0) {
-    <div class="flex justify-end">
-      <button
-        class="btn btn-sm btn-ghost text-error"
-        (click)="onClearCompleted()"
-        [disabled]="!todoService.todos().some(t => t.completed)"
-      >
-        <i class="ri-delete-bin-2-line"></i> Clear completed
+</div>
+
+<!-- Create / Edit modal -->
+<dialog class="modal" [class.modal-open]="showModal()">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+      @if (editingTodo()) {
+        <i class="ri-pencil-line"></i> Edit Todo
+      } @else {
+        <i class="ri-add-circle-line"></i> New Todo
+      }
+    </h3>
+
+    <div class="flex flex-col gap-3">
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">
+          <i class="ri-text"></i> Title <span class="text-error">*</span>
+        </legend>
+        <input
+          class="input input-bordered w-full"
+          placeholder="What needs to be done?"
+          [(ngModel)]="formTitle"
+          name="formTitle" />
+      </fieldset>
+
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">
+          <i class="ri-align-left"></i> Description
+        </legend>
+        <textarea
+          class="textarea textarea-bordered w-full"
+          placeholder="Optional details…"
+          rows="3"
+          [(ngModel)]="formDescription"
+          name="formDescription">
+        </textarea>
+      </fieldset>
+    </div>
+
+    <div class="modal-action">
+      <button class="btn btn-ghost" (click)="showModal.set(false)">
+        <i class="ri-close-line"></i> Cancel
+      </button>
+      <button class="btn btn-primary" [disabled]="!formTitle.trim()" (click)="save()">
+        <i class="ri-save-line"></i> Save
       </button>
     </div>
-  }
+  </div>
+  <div class="modal-backdrop" (click)="showModal.set(false)"></div>
+</dialog>
 
-</div>
+<!-- Delete confirmation modal -->
+<dialog class="modal" [class.modal-open]="deleteConfirmId() !== null">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg flex items-center gap-2 text-error">
+      <i class="ri-error-warning-line"></i> Delete todo?
+    </h3>
+    <p class="py-4 text-base-content/70">This action cannot be undone.</p>
+    <div class="modal-action">
+      <button class="btn btn-ghost" (click)="deleteConfirmId.set(null)">
+        <i class="ri-close-line"></i> Cancel
+      </button>
+      <button class="btn btn-error" (click)="doDelete()">
+        <i class="ri-delete-bin-line"></i> Delete
+      </button>
+    </div>
+  </div>
+  <div class="modal-backdrop" (click)="deleteConfirmId.set(null)"></div>
+</dialog>

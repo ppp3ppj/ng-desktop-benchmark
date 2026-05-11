@@ -5,12 +5,10 @@ const DB_PATH = "sqlite:app.db";
 
 @Injectable({ providedIn: "root" })
 export class DatabaseService {
-  private db: Database | null = null;
+  // Store the Promise itself — concurrent callers share one load(), not one per caller.
+  private readonly dbPromise: Promise<Database> = Database.load(DB_PATH);
 
-  async getDb(): Promise<Database> {
-    if (!this.db) {
-      this.db = await Database.load(DB_PATH);
-    }
-    return this.db;
+  getDb(): Promise<Database> {
+    return this.dbPromise;
   }
 }

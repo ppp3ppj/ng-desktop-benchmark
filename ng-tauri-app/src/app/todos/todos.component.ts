@@ -1,56 +1,63 @@
-import { Component, OnInit, inject, signal, computed } from "@angular/core";
-import { SlicePipe } from "@angular/common";
+import { Component, OnInit, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { TodoService } from "./todo.service";
-
-type Filter = "all" | "active" | "completed";
+import { TodoService, Todo } from "./todo.service";
 
 @Component({
   selector: "app-todos",
-  imports: [FormsModule, SlicePipe],
+  imports: [FormsModule],
   templateUrl: "./todos.component.html",
 })
 export class TodosComponent implements OnInit {
-  readonly todoService = inject(TodoService);
+  readonly svc = inject(TodoService);
 
-  newTitle = "";
-  filter = signal<Filter>("all");
+  readonly showModal = signal(false);
+  readonly editingTodo = signal<Todo | null>(null);
+  readonly deleteConfirmId = signal<number | null>(null);
 
-  readonly filtered = computed(() => {
-    const todos = this.todoService.todos();
-    const f = this.filter();
-    if (f === "active") return todos.filter((t) => !t.completed);
-    if (f === "completed") return todos.filter((t) => t.completed);
-    return todos;
-  });
-
-  readonly remaining = computed(
-    () => this.todoService.todos().filter((t) => !t.completed).length
-  );
+  formTitle = "";
+  formDescription = "";
 
   async ngOnInit(): Promise<void> {
-    await this.todoService.loadAll();
+    await this.svc.loadAll();
   }
 
-  async onAdd(): Promise<void> {
-    if (!this.newTitle.trim()) return;
-    await this.todoService.add(this.newTitle);
-    this.newTitle = "";
+  openCreate(): void {
+    this.editingTodo.set(null);
+    this.formTitle = "";
+    this.formDescription = "";
+    this.showModal.set(true);
   }
 
-  async onToggle(id: number, completed: number): Promise<void> {
-    await this.todoService.toggleComplete(id, completed);
+  openEdit(todo: Todo): void {
+    this.editingTodo.set(todo);
+    this.formTitle = todo.title;
+    this.formDescription = todo.description ?? "";
+    this.showModal.set(true);
   }
 
-  async onDelete(id: number): Promise<void> {
-    await this.todoService.remove(id);
+  async toggle(id: number): Promise<void> {
+    await this.svc.toggleComplete(id);
   }
 
-  async onClearCompleted(): Promise<void> {
-    await this.todoService.clearCompleted();
+  async save(): Promise<void> {
+    const editing = this.editingTodo();
+    if (editing) {
+      await this.svc.update(editing.id, this.formTitle, this.formDescription);
+    } else {
+      await this.svc.add(this.formTitle, this.formDescription);
+    }
+    this.showModal.set(false);
   }
 
-  setFilter(f: Filter): void {
-    this.filter.set(f);
+  confirmDelete(id: number): void {
+    this.deleteConfirmId.set(id);
+  }
+
+  async doDelete(): Promise<void> {
+    const id = this.deleteConfirmId();
+    if (id !== null) {
+      await this.svc.remove(id);
+      this.deleteConfirmId.set(null);
+    }
   }
 }

@@ -4,13 +4,14 @@ import { DatabaseService } from "../database.service";
 export interface Todo {
   id: number;
   title: string;
+  description: string | null;
   completed: number;
   created_at: string;
 }
 
 @Injectable({ providedIn: "root" })
 export class TodoService {
-  private readonly db = inject(DatabaseService);
+  private readonly db$ = inject(DatabaseService).getDb();
 
   readonly todos = signal<Todo[]>([]);
   readonly loading = signal(false);
@@ -20,8 +21,8 @@ export class TodoService {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const conn = await this.db.getDb();
-      const rows = await conn.select<Todo[]>(
+      const db = await this.db$;
+      const rows = await db.select<Todo[]>(
         "SELECT * FROM todos ORDER BY created_at DESC"
       );
       this.todos.set(rows);
@@ -32,30 +33,36 @@ export class TodoService {
     }
   }
 
-  async add(title: string): Promise<void> {
-    const conn = await this.db.getDb();
-    await conn.execute("INSERT INTO todos (title) VALUES (?)", [title.trim()]);
+  async add(title: string, description: string): Promise<void> {
+    const db = await this.db$;
+    await db.execute(
+      "INSERT INTO todos (title, description) VALUES (?, ?)",
+      [title.trim(), description.trim() || null]
+    );
     await this.loadAll();
   }
 
-  async toggleComplete(id: number, completed: number): Promise<void> {
-    const conn = await this.db.getDb();
-    await conn.execute("UPDATE todos SET completed = ? WHERE id = ?", [
-      completed ? 0 : 1,
-      id,
-    ]);
+  async update(id: number, title: string, description: string): Promise<void> {
+    const db = await this.db$;
+    await db.execute(
+      "UPDATE todos SET title = ?, description = ? WHERE id = ?",
+      [title.trim(), description.trim() || null, id]
+    );
+    await this.loadAll();
+  }
+
+  async toggleComplete(id: number): Promise<void> {
+    const db = await this.db$;
+    await db.execute(
+      "UPDATE todos SET completed = NOT completed WHERE id = ?",
+      [id]
+    );
     await this.loadAll();
   }
 
   async remove(id: number): Promise<void> {
-    const conn = await this.db.getDb();
-    await conn.execute("DELETE FROM todos WHERE id = ?", [id]);
-    await this.loadAll();
-  }
-
-  async clearCompleted(): Promise<void> {
-    const conn = await this.db.getDb();
-    await conn.execute("DELETE FROM todos WHERE completed = 1");
+    const db = await this.db$;
+    await db.execute("DELETE FROM todos WHERE id = ?", [id]);
     await this.loadAll();
   }
 }
