@@ -1,3 +1,5 @@
+use std::env;
+use std::fmt::Write;
 use std::fs;
 use std::path::PathBuf;
 
@@ -6,110 +8,139 @@ fn main() {
     generate_migrations();
 }
 
+// ── Types ────────────────────────────────────────────────────────────────────
+
+struct Entry {
+    version: i64,
+    description: String,
+    sql: String,
+    kind: &'static str,
+}
+
+// ── Orchestrator ─────────────────────────────────────────────────────────────
+
 fn generate_migrations() {
     let migrations_dir = PathBuf::from("../migrations");
-    let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
-    let is_debug = std::env::var("PROFILE").unwrap_or_default() == "debug";
+    let out_dir: PathBuf = env::var_os("OUT_DIR").unwrap().into();
+    let is_debug = env::var("PROFILE").map_or(false, |p| p == "debug");
 
     println!("cargo:rerun-if-changed=../migrations");
 
-    struct Entry {
-        version: i64,
-        description: String,
-        sql: String,
-        kind: &'static str,
+    let mut entries = collect_entries(&migrations_dir);
+    // sort_unstable: faster than sort (no stability needed for primitive keys)
+    entries.sort_unstable_by_key(|e| (e.version, if e.kind == "Up" { 0i32 } else { 1 }));
+
+    let code = build_code(&entries);
+    fs::write(out_dir.join("migrations.rs"), &code)
+        .expect("Failed to write migrations.rs");
+
+    if is_debug {
+        emit_trace(&entries, &code);
+    }
+}
+
+// ── File scanning ─────────────────────────────────────────────────────────────
+
+fn collect_entries(dir: &PathBuf) -> Vec<Entry> {
+    if !dir.exists() {
+        return Vec::new();
     }
 
-    let mut entries: Vec<Entry> = Vec::new();
+    let mut files: Vec<_> = fs::read_dir(dir)
+        .expect("Failed to read migrations directory")
+        .filter_map(Result::ok) // idiomatic: no closure allocation
+        .collect();
 
-    if migrations_dir.exists() {
-        let mut files: Vec<_> = fs::read_dir(&migrations_dir)
-            .expect("Failed to read migrations directory")
-            .filter_map(|e| e.ok())
-            .collect();
+    files.sort_unstable_by_key(|e| e.file_name());
 
-        files.sort_by_key(|e| e.file_name());
+    files.iter().filter_map(|file| parse_entry(file)).collect()
+}
 
-        for file in files {
-            let name = file.file_name();
-            let name_str = name.to_string_lossy().to_string();
+fn parse_entry(file: &std::fs::DirEntry) -> Option<Entry> {
+    let name = file.file_name();
+    // to_string_lossy returns Cow<str> — borrows for valid UTF-8 (zero alloc for ASCII filenames)
+    let name_str = name.to_string_lossy();
 
-            let (kind, stem): (&'static str, String) =
-                if let Some(s) = name_str.strip_suffix(".up.sql") {
-                    ("Up", s.to_string())
-                } else if let Some(s) = name_str.strip_suffix(".down.sql") {
-                    ("Down", s.to_string())
-                } else {
-                    continue;
-                };
+    let (kind, stem): (&'static str, &str) =
+        if let Some(s) = name_str.strip_suffix(".up.sql") {
+            ("Up", s)
+        } else if let Some(s) = name_str.strip_suffix(".down.sql") {
+            ("Down", s)
+        } else {
+            return None;
+        };
 
-            let mut parts = stem.splitn(2, '_');
-            let version: i64 = match parts.next().and_then(|v| v.parse().ok()) {
-                Some(v) => v,
-                None => panic!("Invalid migration filename (expected <timestamp>_<name>): {name_str}"),
-            };
-            let description = match parts.next() {
-                Some(d) => d.to_string(),
-                None => panic!("Missing description in migration filename: {name_str}"),
-            };
+    // split_once: cleaner + avoids iterator overhead of splitn
+    let (version_str, description) = stem.split_once('_').unwrap_or_else(|| {
+        panic!("Invalid migration filename (expected <timestamp>_<desc>): {name_str}")
+    });
 
-            println!("cargo:rerun-if-changed={}", file.path().display());
+    let version: i64 = version_str
+        .parse()
+        .unwrap_or_else(|_| panic!("Non-numeric version in: {name_str}"));
 
-            let sql = fs::read_to_string(file.path())
-                .unwrap_or_else(|_| panic!("Failed to read migration file: {name_str}"));
+    let path = file.path();
+    println!("cargo:rerun-if-changed={}", path.display());
 
-            entries.push(Entry { version, description, sql, kind });
-        }
-    }
+    let sql = fs::read_to_string(&path)
+        .unwrap_or_else(|_| panic!("Failed to read: {}", path.display()));
 
-    entries.sort_by_key(|e| (e.version, if e.kind == "Up" { 0i32 } else { 1 }));
+    Some(Entry {
+        version,
+        description: description.to_owned(),
+        sql,
+        kind,
+    })
+}
 
-    // ── Generate Rust code ───────────────────────────────────────────────────
-    let mut code =
-        String::from("fn migrations() -> Vec<tauri_plugin_sql::Migration> {\n");
+// ── Code generation ───────────────────────────────────────────────────────────
+
+fn build_code(entries: &[Entry]) -> String {
+    // Pre-size: avoids re-allocations — capacity driven by actual SQL content length
+    let sql_bytes: usize = entries.iter().map(|e| e.sql.len()).sum();
+    let mut code = String::with_capacity(200 + entries.len() * 120 + sql_bytes);
+
+    code.push_str("fn migrations() -> Vec<tauri_plugin_sql::Migration> {\n");
     code.push_str("    use tauri_plugin_sql::{Migration, MigrationKind};\n");
     code.push_str("    vec![\n");
 
-    for e in &entries {
-        code.push_str(&format!(
+    for e in entries {
+        // write! on String: zero intermediate allocation vs push_str(&format!(...))
+        write!(
+            code,
             "        Migration {{ version: {}, description: \"{}\", sql: r######\"{}\"######, kind: MigrationKind::{} }},\n",
             e.version, e.description, e.sql, e.kind
-        ));
+        )
+        .unwrap();
     }
 
     code.push_str("    ]\n");
     code.push_str("}\n");
+    code
+}
 
-    fs::write(out_dir.join("migrations.rs"), &code)
-        .expect("Failed to write generated migrations.rs");
+// ── Debug trace (debug profile only) ─────────────────────────────────────────
 
-    // ── Debug trace (debug builds only) ─────────────────────────────────────
-    if is_debug {
+fn emit_trace(entries: &[Entry], code: &str) {
+    println!(
+        "cargo:warning=╔══ migrations codegen ══ {} migration(s) found",
+        entries.len()
+    );
+    for e in entries {
         println!(
-            "cargo:warning=╔══ migrations codegen ══ {} migration(s) found",
-            entries.len()
-        );
-        for e in &entries {
-            println!(
-                "cargo:warning=║  [{:<4}] v{} — {}",
-                e.kind, e.version, e.description
-            );
-        }
-        println!("cargo:warning=╚══ generated → $OUT_DIR/migrations.rs");
-
-        // Write a human-readable copy beside lib.rs for IDE inspection
-        let debug_out = PathBuf::from("src/migrations_generated.rs");
-        let debug_code = format!(
-            "// AUTO-GENERATED by build.rs — debug only, do not commit.\n\
-             // Re-generated on every `cargo build` (debug profile).\n\
-             // Source files: migrations/*.up.sql / *.down.sql\n\
-             \n\
-             {code}"
-        );
-        fs::write(&debug_out, &debug_code)
-            .expect("Failed to write src/migrations_generated.rs");
-        println!(
-            "cargo:warning=║  debug copy → src/migrations_generated.rs"
+            "cargo:warning=║  [{:<4}] v{} — {}",
+            e.kind, e.version, e.description
         );
     }
+    println!("cargo:warning=╚══ generated → $OUT_DIR/migrations.rs");
+
+    let mut debug_code = String::with_capacity(200 + code.len());
+    debug_code.push_str("// AUTO-GENERATED by build.rs — debug only, do not commit.\n");
+    debug_code.push_str("// Re-generated on every `cargo build` (debug profile).\n");
+    debug_code.push_str("// Source files: migrations/*.up.sql / *.down.sql\n\n");
+    debug_code.push_str(code);
+
+    fs::write("src/migrations_generated.rs", debug_code)
+        .expect("Failed to write src/migrations_generated.rs");
+    println!("cargo:warning=║  debug copy → src/migrations_generated.rs");
 }
