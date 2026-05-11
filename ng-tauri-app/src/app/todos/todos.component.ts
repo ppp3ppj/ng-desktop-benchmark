@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from "@angular/core";
+import { SlicePipe } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { TodoService } from "./todo.service";
 
@@ -6,7 +7,7 @@ type Filter = "all" | "active" | "completed";
 
 @Component({
   selector: "app-todos",
-  imports: [FormsModule],
+  imports: [FormsModule, SlicePipe],
   templateUrl: "./todos.component.html",
 })
 export class TodosComponent implements OnInit {
