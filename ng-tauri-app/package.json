@@ -6,7 +6,11 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "dist": "bunx tauri build",
+    "dist:win": "bunx tauri build --bundles nsis,msi",
+    "dist:mac": "bunx tauri build --bundles dmg,app",
+    "dist:linux": "bunx tauri build --bundles deb,rpm,appimage"
   },
   "private": true,
   "dependencies": {
