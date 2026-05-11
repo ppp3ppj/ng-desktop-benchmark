@@ -1,0 +1,207 @@
+<div class="p-6 space-y-8">
+
+  <!-- Alert -->
+  @if (alertVisible()) {
+    <div role="alert" class="alert alert-info">
+      <i class="ri-information-line text-xl shrink-0"></i>
+      <span>Welcome! This page showcases DaisyUI components.</span>
+      <button class="btn btn-sm btn-ghost" (click)="alertVisible.set(false)">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+  }
+
+  <!-- Hero -->
+  <div class="hero bg-base-200 rounded-box py-12">
+    <div class="hero-content text-center">
+      <div class="max-w-md">
+        <h1 class="text-5xl font-bold">Hello DaisyUI</h1>
+        <p class="py-6 text-base-content/70">
+          A demo page built with DaisyUI v5 and TailwindCSS v4 inside an Electron + Angular app.
+        </p>
+        <button class="btn btn-primary">
+          <i class="ri-rocket-line"></i> Get Started
+        </button>
+        <button class="btn btn-outline ml-2">
+          <i class="ri-book-open-line"></i> Learn More
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats shadow w-full">
+    <div class="stat">
+      <div class="stat-figure text-primary">
+        <i class="ri-angularjs-line text-4xl"></i>
+      </div>
+      <div class="stat-title">Framework</div>
+      <div class="stat-value text-primary">Angular 21</div>
+      <div class="stat-desc">Standalone components</div>
+    </div>
+    <div class="stat">
+      <div class="stat-figure text-secondary">
+        <i class="ri-palette-line text-4xl"></i>
+      </div>
+      <div class="stat-title">UI Library</div>
+      <div class="stat-value text-secondary">DaisyUI 5</div>
+      <div class="stat-desc">TailwindCSS v4</div>
+    </div>
+    <div class="stat">
+      <div class="stat-figure text-accent">
+        <i class="ri-window-line text-4xl"></i>
+      </div>
+      <div class="stat-title">Runtime</div>
+      <div class="stat-value text-accent">Electron 42</div>
+      <div class="stat-desc">Node.js-powered desktop</div>
+    </div>
+  </div>
+
+  <!-- Cards row -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+    <!-- Counter card -->
+    <div class="card bg-base-200 shadow">
+      <div class="card-body items-center text-center">
+        <h2 class="card-title"><i class="ri-calculator-line"></i> Counter</h2>
+        <div class="text-5xl font-mono font-bold my-4">{{ counter() }}</div>
+        <div class="card-actions">
+          <button class="btn btn-error btn-sm" (click)="decrement()">
+            <i class="ri-subtract-line"></i>
+          </button>
+          <button class="btn btn-success btn-sm" (click)="increment()">
+            <i class="ri-add-line"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Badges card -->
+    <div class="card bg-base-200 shadow">
+      <div class="card-body">
+        <h2 class="card-title"><i class="ri-price-tag-3-line"></i> Badges</h2>
+        <div class="flex flex-wrap gap-2 mt-2">
+          <span class="badge badge-primary">Primary</span>
+          <span class="badge badge-secondary">Secondary</span>
+          <span class="badge badge-accent">Accent</span>
+          <span class="badge badge-success">Success</span>
+          <span class="badge badge-warning">Warning</span>
+          <span class="badge badge-error">Error</span>
+          <span class="badge badge-outline">Outline</span>
+          <span class="badge badge-ghost">Ghost</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress card -->
+    <div class="card bg-base-200 shadow">
+      <div class="card-body">
+        <h2 class="card-title"><i class="ri-bar-chart-line"></i> Progress</h2>
+        <div class="space-y-2 mt-2">
+          <progress class="progress progress-primary w-full" value="70" max="100"></progress>
+          <progress class="progress progress-secondary w-full" value="50" max="100"></progress>
+          <progress class="progress progress-accent w-full" value="30" max="100"></progress>
+          <progress class="progress progress-success w-full" value="90" max="100"></progress>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buttons showcase -->
+  <div class="card bg-base-200 shadow">
+    <div class="card-body">
+      <h2 class="card-title mb-2"><i class="ri-cursor-line"></i> Buttons</h2>
+      <div class="flex flex-wrap gap-2">
+        <button class="btn"><i class="ri-apps-line"></i> Default</button>
+        <button class="btn btn-primary"><i class="ri-star-line"></i> Primary</button>
+        <button class="btn btn-secondary"><i class="ri-heart-line"></i> Secondary</button>
+        <button class="btn btn-accent"><i class="ri-flashlight-line"></i> Accent</button>
+        <button class="btn btn-success"><i class="ri-check-line"></i> Success</button>
+        <button class="btn btn-warning"><i class="ri-alert-line"></i> Warning</button>
+        <button class="btn btn-error"><i class="ri-close-circle-line"></i> Error</button>
+        <button class="btn btn-outline"><i class="ri-border-line"></i> Outline</button>
+        <button class="btn btn-ghost"><i class="ri-ghost-line"></i> Ghost</button>
+        <button class="btn btn-link"><i class="ri-link"></i> Link</button>
+        <button class="btn btn-primary btn-sm"><i class="ri-font-size"></i> Small</button>
+        <button class="btn btn-primary btn-xs">XSmall</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form inputs -->
+  <div class="card bg-base-200 shadow">
+    <div class="card-body">
+      <h2 class="card-title mb-2"><i class="ri-file-list-3-line"></i> Form Elements</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label class="form-control w-full">
+          <div class="label"><span class="label-text"><i class="ri-input-cursor-move"></i> Text input</span></div>
+          <input type="text" placeholder="Type here…" class="input input-bordered w-full" />
+        </label>
+        <label class="form-control w-full">
+          <div class="label"><span class="label-text"><i class="ri-list-check"></i> Select</span></div>
+          <select class="select select-bordered w-full">
+            <option>Option A</option>
+            <option>Option B</option>
+            <option>Option C</option>
+          </select>
+        </label>
+        <label class="form-control w-full">
+          <div class="label"><span class="label-text"><i class="ri-text-wrap"></i> Textarea</span></div>
+          <textarea class="textarea textarea-bordered w-full" placeholder="Write something…"></textarea>
+        </label>
+        <div class="flex flex-col gap-2 pt-2">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" class="checkbox checkbox-primary" checked />
+            <span><i class="ri-checkbox-line"></i> Checkbox</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="r" class="radio radio-secondary" checked />
+            <span><i class="ri-radio-button-line"></i> Radio A</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="r" class="radio radio-secondary" />
+            <span><i class="ri-radio-button-line"></i> Radio B</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" class="toggle toggle-accent" checked />
+            <span><i class="ri-toggle-line"></i> Toggle</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Icon showcase -->
+  <div class="card bg-base-200 shadow">
+    <div class="card-body">
+      <h2 class="card-title mb-2"><i class="ri-remixicon-line"></i> Remixicon Gallery</h2>
+      <div class="flex flex-wrap gap-4 text-2xl">
+        <i class="ri-home-line" title="ri-home-line"></i>
+        <i class="ri-user-line" title="ri-user-line"></i>
+        <i class="ri-settings-3-line" title="ri-settings-3-line"></i>
+        <i class="ri-search-line" title="ri-search-line"></i>
+        <i class="ri-notification-line" title="ri-notification-line"></i>
+        <i class="ri-mail-line" title="ri-mail-line"></i>
+        <i class="ri-chat-1-line" title="ri-chat-1-line"></i>
+        <i class="ri-calendar-line" title="ri-calendar-line"></i>
+        <i class="ri-folder-line" title="ri-folder-line"></i>
+        <i class="ri-image-line" title="ri-image-line"></i>
+        <i class="ri-video-line" title="ri-video-line"></i>
+        <i class="ri-music-line" title="ri-music-line"></i>
+        <i class="ri-map-pin-line" title="ri-map-pin-line"></i>
+        <i class="ri-shield-line" title="ri-shield-line"></i>
+        <i class="ri-cloud-line" title="ri-cloud-line"></i>
+        <i class="ri-database-line" title="ri-database-line"></i>
+        <i class="ri-code-line" title="ri-code-line"></i>
+        <i class="ri-terminal-line" title="ri-terminal-line"></i>
+        <i class="ri-github-line" title="ri-github-line"></i>
+        <i class="ri-global-line" title="ri-global-line"></i>
+        <i class="ri-sun-line" title="ri-sun-line"></i>
+        <i class="ri-moon-line" title="ri-moon-line"></i>
+        <i class="ri-download-line" title="ri-download-line"></i>
+        <i class="ri-upload-line" title="ri-upload-line"></i>
+      </div>
+    </div>
+  </div>
+
+</div>
