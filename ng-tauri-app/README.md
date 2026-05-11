@@ -135,7 +135,8 @@ sqlite:app.db  (app data directory)
 | `timestamp` | 14-digit sortable `YYYYMMDDHHmmss` | `20260601120000` |
 | `description` | snake_case, no spaces | `add_priority` |
 
-Both `.up.sql` and `.down.sql` must exist for every version.
+Only `.up.sql` is required. `.down.sql` is optional — `build.rs` includes it if present, ignores it if not.
+`tauri-plugin-sql` only runs `Up` migrations automatically on launch; `Down` migrations are never triggered unless you call them explicitly in code.
 
 ### Adding a new migration — step by step
 
@@ -170,7 +171,7 @@ bun run tauri dev
 | Rule | Reason |
 |------|--------|
 | Never edit a released migration | Already applied on user machines — changes are silently ignored |
-| Always provide a `.down.sql` | Required even if it is a no-op (`SELECT 1;`) |
+| Add `.down.sql` when rollback is realistic | Destructive changes (`DROP`, `ALTER`) are worth reversing; simple additions often are not |
 | Timestamp must be unique | Duplicate versions cause a compile-time panic |
 | Use `IF NOT EXISTS` / `IF EXISTS` guards | Makes migrations safe to re-run during development |
 | One logical change per migration | Easier to debug and roll back |
