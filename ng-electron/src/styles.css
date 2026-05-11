@@ -1,5 +1,10 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter";
 @import "remixicon/fonts/remixicon.css";
 @plugin "daisyui" {
   themes: light --default, dark --prefersdark, cyberpunk;
+}
+
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
 }
