@@ -1,5 +1,6 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
+import { registerTodoIpc } from './ipc/todo.ipc';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -24,6 +25,7 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  registerTodoIpc();
   createWindow();
 
   app.on('activate', () => {

@@ -1,0 +1,118 @@
+<div class="container mx-auto max-w-2xl px-4 py-8">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">Todo List</h1>
+    <button class="btn btn-primary btn-sm" (click)="openCreate()">+ New Todo</button>
+  </div>
+
+  <!-- Loading -->
+  @if (svc.loading()) {
+    <div class="flex justify-center py-16">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+  }
+
+  <!-- Empty state -->
+  @else if (svc.todos().length === 0) {
+    <div class="flex flex-col items-center gap-3 py-20 text-base-content/40">
+      <span class="text-5xl">📝</span>
+      <p class="text-lg font-medium">No todos yet</p>
+      <p class="text-sm">Click <strong>+ New Todo</strong> to get started</p>
+    </div>
+  }
+
+  <!-- Todo list -->
+  @else {
+    <ul class="flex flex-col gap-3">
+      @for (todo of svc.todos(); track todo.id) {
+        <li class="card bg-base-200 shadow-sm transition-opacity"
+            [class.opacity-50]="todo.completed">
+          <div class="card-body p-4 flex-row items-start gap-3">
+
+            <!-- Checkbox -->
+            <input
+              type="checkbox"
+              class="checkbox checkbox-primary mt-0.5 shrink-0"
+              [checked]="todo.completed"
+              (change)="toggle(todo.id)" />
+
+            <!-- Content -->
+            <div class="flex-1 min-w-0">
+              <p class="font-medium break-words"
+                 [class.line-through]="todo.completed">
+                {{ todo.title }}
+              </p>
+              @if (todo.description) {
+                <p class="text-sm text-base-content/60 mt-1 break-words">
+                  {{ todo.description }}
+                </p>
+              }
+              <p class="text-xs text-base-content/40 mt-2">{{ todo.created_at }}</p>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-1 shrink-0">
+              <button class="btn btn-ghost btn-xs" title="Edit"
+                      (click)="openEdit(todo)">✏️</button>
+              <button class="btn btn-ghost btn-xs text-error" title="Delete"
+                      (click)="confirmDelete(todo.id)">🗑️</button>
+            </div>
+
+          </div>
+        </li>
+      }
+    </ul>
+  }
+
+</div>
+
+<!-- Create / Edit modal -->
+<dialog class="modal" [class.modal-open]="showModal()">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg mb-4">
+      {{ editingTodo() ? 'Edit Todo' : 'New Todo' }}
+    </h3>
+
+    <div class="flex flex-col gap-3">
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">Title <span class="text-error">*</span></legend>
+        <input
+          class="input input-bordered w-full"
+          placeholder="What needs to be done?"
+          [(ngModel)]="formTitle" />
+      </fieldset>
+
+      <fieldset class="fieldset">
+        <legend class="fieldset-legend">Description</legend>
+        <textarea
+          class="textarea textarea-bordered w-full"
+          placeholder="Optional details…"
+          rows="3"
+          [(ngModel)]="formDescription">
+        </textarea>
+      </fieldset>
+    </div>
+
+    <div class="modal-action">
+      <button class="btn btn-ghost" (click)="showModal.set(false)">Cancel</button>
+      <button class="btn btn-primary" [disabled]="!formTitle.trim()" (click)="save()">
+        Save
+      </button>
+    </div>
+  </div>
+  <div class="modal-backdrop" (click)="showModal.set(false)"></div>
+</dialog>
+
+<!-- Delete confirmation modal -->
+<dialog class="modal" [class.modal-open]="deleteConfirmId() !== null">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg">Delete todo?</h3>
+    <p class="py-4 text-base-content/70">This action cannot be undone.</p>
+    <div class="modal-action">
+      <button class="btn btn-ghost" (click)="deleteConfirmId.set(null)">Cancel</button>
+      <button class="btn btn-error" (click)="doDelete()">Delete</button>
+    </div>
+  </div>
+  <div class="modal-backdrop" (click)="deleteConfirmId.set(null)"></div>
+</dialog>

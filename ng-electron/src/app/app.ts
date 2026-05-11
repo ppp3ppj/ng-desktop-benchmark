@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TitleCasePipe } from '@angular/common';
 import { ThemeService, Theme } from './theme.service';
 
@@ -7,10 +8,9 @@ import { ThemeService, Theme } from './theme.service';
   templateUrl: './app.html',
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TitleCasePipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TitleCasePipe],
 })
 export class App {
-  protected readonly title = signal('ng-electron');
   protected readonly themeService = inject(ThemeService);
 
   protected setTheme(event: Event): void {
