@@ -1,22 +1,31 @@
-import { Component } from "@angular/core";
+import { Component, inject, OnInit } from "@angular/core";
 import { RouterOutlet } from "@angular/router";
 import { invoke } from "@tauri-apps/api/core";
+import { ThemeService } from "./theme.service";
+import { FormsModule } from "@angular/forms";
 
 @Component({
   selector: "app-root",
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, FormsModule],
   templateUrl: "./app.component.html",
   styleUrl: "./app.component.css",
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
+  protected readonly themeService = inject(ThemeService);
   greetingMessage = "";
+
+  ngOnInit(): void {
+    this.themeService.init();
+  }
 
   greet(event: SubmitEvent, name: string): void {
     event.preventDefault();
-
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
     invoke<string>("greet", { name }).then((text) => {
       this.greetingMessage = text;
     });
+  }
+
+  onThemeChange(theme: string): void {
+    this.themeService.set(theme as any);
   }
 }
