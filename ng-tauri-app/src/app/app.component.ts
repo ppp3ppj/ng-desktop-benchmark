@@ -1,12 +1,12 @@
 import { Component, inject, OnInit } from "@angular/core";
-import { RouterOutlet } from "@angular/router";
+import { RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
 import { invoke } from "@tauri-apps/api/core";
 import { ThemeService } from "./theme.service";
 import { FormsModule } from "@angular/forms";
 
 @Component({
   selector: "app-root",
-  imports: [RouterOutlet, FormsModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, FormsModule],
   templateUrl: "./app.component.html",
   styleUrl: "./app.component.css",
 })
